@@ -68,14 +68,12 @@
     void ConsolePut(BYTE c);
     void ConsolePutROMString(ROM char* str);
     BYTE ConsoleGet(void);
-   // #ifdef USE_MINI_RADAR
-        void UART1Init(void);
-        void UART1PutROMString(ROM char* str);
-        void UART1Put(BYTE c);
-        void UART1PrintChar(BYTE toPrint);
-        void UART1PrintWord(WORD toPrint);
-        BYTE UART1ConsoleGet(void);
-   // #endif
+    void UART1Init(void);
+    void UART1PutROMString(ROM char* str);
+    void UART1Put(BYTE c);
+    void UART1PrintChar(BYTE toPrint);
+    void UART1PrintWord(WORD toPrint);
+    BYTE UART1ConsoleGet(void);
 #elif defined(__18CXX)
 #if 1   // Useful for disabling the console (saving power)
     void ConsoleInit(void);
