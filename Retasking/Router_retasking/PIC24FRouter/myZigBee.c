@@ -3,7 +3,7 @@
 //* Software License Agreement
 //*
 //* The software supplied herewith by Microchip Technology Incorporated
-//* (the ?Company?) for its PICmicro® Microcontroller is intended and
+//* (the ?Company?) for its PICmicroÂ® Microcontroller is intended and
 //* supplied to you, the Company?s customer, for use solely and
 //* exclusively on Microchip PICmicro Microcontroller products. The
 //* software is owned by the Company and/or its supplier, and is
@@ -118,11 +118,6 @@ ROM NODE_SIMPLE_DESCRIPTOR Config_Simple_Descriptors[3] =
             //STATUS_RESPONSE_CLUSTER,
             TRANSMIT_COUNTED_PACKETS_CLUSTER
         }
-
-
-
-
-
     #endif
 
     }
@@ -138,6 +133,3 @@ ROM _Config_NWK_Mode_and_Params Config_NWK_Mode_and_Params =
     PROFILE_nwkSecurityLevel,   //Security Level
     ALLOWED_CHANNELS            //Channels to scan
 };
-
-
-
