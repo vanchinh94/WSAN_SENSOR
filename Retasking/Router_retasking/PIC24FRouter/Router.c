@@ -337,7 +337,6 @@ extern NWK_STATUS nwkStatus;
     WORD CYCLE_SENDING_5M;
 #endif
 
-
 //variable store state of device
 #if defined(CHAMSOCLAN)
 static union
@@ -497,29 +496,20 @@ int main(void)
     orphanTries = 3;
     #ifndef THEODOIDONGVAT
         /**************trongkhanhbkhn thoi gian gui*********/
-       CYCLE_SENDING_5M = 1 * ONE_MINUTE_VALUE;// chu k? ki?m tra d? li?u là 5 phút
-       CYCLE_SENDING = 100 * ONE_MINUTE_VALUE;//chu k? g?i d? li?u ??nh k? là 1 ngày 1 l?n
+       CYCLE_SENDING_5M = 1 * ONE_MINUTE_VALUE;// chu k? ki?m tra d? li?u lÃ  5 phÃºt
+       CYCLE_SENDING = 100 * ONE_MINUTE_VALUE;//chu k? g?i d? li?u ??nh k? lÃ  1 ngÃ y 1 l?n
        TIME_SENDING_PACKET = 0;//1s gui 1 goi data
        COUNT_PACKET = 0;//dem so luong goi can gui
     #endif
    
     // If you are going to send data to a terminal, initialize module UART2.
     // Initialize module UART2 to communicate with Control Pump board.
-    #if defined(USE_DEBUG) || defined(USE_CONTROL_PUMP) || defined(USE_CONTROL_ALARM)
+    #if defined(USE_PTC06) || defined(USE_CONTROL_PUMP) || defined(USE_CONTROL_ALARM)
 	ConsoleInit();
-        UART1Init();
     #endif
-        UART1Init();//xxxxx
     // Initialize module UART1 to communicate with Miniradar sensor.
-    #if defined(USE_MINI_RADAR)
+    #if defined(USE_DEBUG) || defined(USE_MINI_RADAR)
         UART1Init();
-    #endif
-
-    #if defined(USE_DEBUG)
-        #if defined(USE_MINI_RADAR)
-            printf("Init UART1\r\n");
-        #endif
-        printf("Init UART2\r\n");
     #endif
 
     // Initialize the hardware - must be done before initializing ZigBee.
@@ -602,9 +592,7 @@ int main(void)
     #endif
     /*cai dat ban dau cho cmr*/
     #if defined(USE_PTC06)
-        ConsoleInit();
         Initphoto();
-        //Take_photo();
     #endif
     /* Clearing nwk status flags */
     nwkStatus.flags.Val = 0x00;
@@ -645,7 +633,6 @@ int main(void)
                 --Led_Count;
             }
         }
-
         #else
         if(Led_Count == 0)
         {
@@ -668,12 +655,8 @@ int main(void)
 
 void ProcessZigBeePrimitives(void)
 {
-
-
     switch (currentPrimitive)
     {
-
-
         case NLME_ROUTE_DISCOVERY_confirm:
             #if defined(USE_DEBUG)
                 if (!params.NLME_ROUTE_DISCOVERY_confirm.Status)
@@ -691,7 +674,6 @@ void ProcessZigBeePrimitives(void)
 
         case NLME_NETWORK_DISCOVERY_confirm:
             currentPrimitive = NO_PRIMITIVE;
-
             switch(params.NLME_NETWORK_DISCOVERY_confirm.Status)
             {
                 case 0x00:
@@ -705,16 +687,13 @@ void ProcessZigBeePrimitives(void)
 
                     // Select a network to try to join.  We're not going to be picky right now...
                     currentNetworkDescriptor = NetworkDescriptor;
-
 SubmitJoinRequest:
                     params.NLME_JOIN_request.PANId = currentNetworkDescriptor->PanID;
-
                     #if defined(USE_DEBUG)
                         printf("Prepare join to network: 0x");
                         PrintWord(params.NLME_JOIN_request.PANId.Val);
                         printf("\r\n");
                     #endif
-
                     if(params.NLME_JOIN_request.PANId.Val != DesireNetworkID)
                     {
                         currentNetworkDescriptor = currentNetworkDescriptor->next;
@@ -757,7 +736,6 @@ SubmitJoinRequest:
                         params.NLME_JOIN_request.ExtendedPANID = currentNetworkDescriptor->ExtendedPANID;
 
                         currentPrimitive = NLME_JOIN_request;
-
                         #if defined(USE_DEBUG)
                             printf("Network(s) found. Trying to join " );
                             PrintWord(params.NLME_JOIN_request.PANId.Val);
@@ -793,7 +771,6 @@ SubmitJoinRequest:
                 #if defined(USE_DEBUG)
                     printf("Join OK!\r\n" );
                 #endif
-
                 // Free the network descriptor list, if it exists. If we joined as an orphan, it will be NULL.
                 while (NetworkDescriptor)
                 {
@@ -801,7 +778,6 @@ SubmitJoinRequest:
                     nfree( NetworkDescriptor );
                     NetworkDescriptor = currentNetworkDescriptor;
                 }
-
                 // Start routing capability.
                 params.NLME_START_ROUTER_request.BeaconOrder = MAC_PIB_macBeaconOrder;
                 params.NLME_START_ROUTER_request.SuperframeOrder = MAC_PIB_macSuperframeOrder;
@@ -815,7 +791,6 @@ SubmitJoinRequest:
                     printf("Status: ");
                     PrintChar( params.NLME_JOIN_confirm.Status );
                 #endif
-
                 // If we were trying as an orphan, see if we have some more orphan attempts.
                 if (ZigBeeStatus.flags.bits.bTryOrphanJoin)
                 {
@@ -830,7 +805,6 @@ SubmitJoinRequest:
                         #if defined(USE_DEBUG)
                             printf("Trying again!\r\n" );
                         #endif
-                        
                     }
                     else
                     {
@@ -905,10 +879,8 @@ SubmitJoinRequest:
                     PrintWord(macPIB.macShortAddress.Val);
                     printf("\r\n");
                 #endif
-
                 // gui toi bo nhung cho biet no vua gia nhap mang
                 SendOneByte(MAC_LONG_ADDR_BYTE0, JOIN_CONFIRM_CLUSTER);
-
                 #if defined (USE_WARNING_LOW_POWER) && !defined(USE_MQ6_V1)
                     AD1CON1bits.SAMP = SET;//Neu dung MQ6 thi khong do ngay
                 #endif
@@ -934,7 +906,6 @@ SubmitJoinRequest:
                 }
                 printf( " just joined.\r\n" );
             #endif
-
             /* For Zigbee 2006: If a new device with the same old longAddress address
              * joins the PAN, then make sure the old short address is no longer used and is
              * overwritten with the new shortAddress & longAddress combination
@@ -943,25 +914,24 @@ SubmitJoinRequest:
                 APS_ADDRESS_MAP currentAPSAddress1;
                 currentAPSAddress1.shortAddr   =   params.NLME_JOIN_indication.ShortAddress;
                 currentAPSAddress1.longAddr    =   params.NLME_JOIN_indication.ExtendedAddress;
-
                 if(LookupAPSAddress(&params.NLME_JOIN_indication.ExtendedAddress) )
                 {
                     for( i = 0; i ^ apscMaxAddrMapEntries; i++)
                     {
-                        #ifdef USE_EXTERNAL_NVM
-                            GetAPSAddress( &currentAPSAddress,  apsAddressMap + i * sizeof(APS_ADDRESS_MAP) );
-                        #else
-                            GetAPSAddress( &currentAPSAddress,  &apsAddressMap[i] );
-                        #endif
-                            if (!memcmp( (void *)&currentAPSAddress.longAddr, (void *)&currentAPSAddress1.longAddr, 8 ))
-                            {
-                                /* overwrite the old with the new short/long address combo  */
-                                #ifdef USE_EXTERNAL_NVM
-                                    PutAPSAddress( apsAddressMap + i * sizeof(APS_ADDRESS_MAP), &currentAPSAddress1);
-                                #else
-                                    PutAPSAddress( &apsAddressMap[i], &currentAPSAddress1 );
-                                #endif
-                            }
+			#ifdef USE_EXTERNAL_NVM
+			    GetAPSAddress( &currentAPSAddress,  apsAddressMap + i * sizeof(APS_ADDRESS_MAP) );
+			#else
+			    GetAPSAddress( &currentAPSAddress,  &apsAddressMap[i] );
+			#endif
+			if (!memcmp( (void *)&currentAPSAddress.longAddr, (void *)&currentAPSAddress1.longAddr, 8 ))
+			{
+			/* overwrite the old with the new short/long address combo  */
+			#ifdef USE_EXTERNAL_NVM
+			    PutAPSAddress( apsAddressMap + i * sizeof(APS_ADDRESS_MAP), &currentAPSAddress1);
+			#else
+			    PutAPSAddress( &apsAddressMap[i], &currentAPSAddress1 );
+			#endif
+			}
                     }   /* end for loop */
                 }   /* end if */
             }   /* end address check block */
@@ -979,18 +949,16 @@ SubmitJoinRequest:
                         currentPrimitive = NLME_LEAVE_request;
                         break;
                     }
-
                     #ifdef I_SUPPORT_SECURITY_SPEC
                         if( params.NLME_JOIN_indication.secureJoin )
                         {
                             BYTE i;
                             for(i = 0; i < 16; i++)
                             {
-                                    KeyVal.v[i] = 0;
+			    	KeyVal.v[i] = 0;
                             }
                             params.APSME_TRANSPORT_KEY_request.Key = &KeyVal;
                             params.APSME_TRANSPORT_KEY_request.TransportKeyData.NetworkKey.KeySeqNumber = 0;
-
                         }
                         else
                         {
@@ -1005,17 +973,17 @@ SubmitJoinRequest:
                             params.APSME_TRANSPORT_KEY_request.TransportKeyData.NetworkKey.KeySeqNumber = currentNetworkKeyInfo.SeqNumber.v[0];
                         }
                     #else
-                        #ifdef PRECONFIGURE_KEY
-                        {
-                            BYTE i;
-                            for(i = 0; i < 16; i++)
-                            {
-                                KeyVal.v[i] = 0;
-                            }
-                            params.APSME_TRANSPORT_KEY_request.Key = &KeyVal;
-                            params.APSME_TRANSPORT_KEY_request.TransportKeyData.NetworkKey.KeySeqNumber = 0;
-                            params.APSME_TRANSPORT_KEY_request._UseSecurity = TRUE;
-                        }
+			#ifdef PRECONFIGURE_KEY
+			    {
+			        BYTE i;
+			        for(i = 0; i < 16; i++)
+			        {
+				    KeyVal.v[i] = 0;
+			        }
+			        params.APSME_TRANSPORT_KEY_request.Key = &KeyVal;
+			        params.APSME_TRANSPORT_KEY_request.TransportKeyData.NetworkKey.KeySeqNumber = 0;
+			        params.APSME_TRANSPORT_KEY_request._UseSecurity = TRUE;
+			    }
                         #else
                             if( params.NLME_JOIN_indication.secureJoin )
                             {
@@ -1074,7 +1042,6 @@ SubmitJoinRequest:
         case NLME_LEAVE_indication:
             {
                 LONG_ADDR myLongAddr;
-
                 GetMACAddress(&myLongAddr);
                 if(!memcmppgm2ram( &params.NLME_LEAVE_indication.DeviceAddress, &myLongAddr, 8 ))
                 {
@@ -1098,7 +1065,6 @@ SubmitJoinRequest:
                     break;
                 }
                 LeavingChildShortAddress = currentAPSAddress.shortAddr;
-
                 #ifdef I_AM_TRUST_CENTER
                     params.APSME_UPDATE_DEVICE_indication.Status = 0x02;
                     params.APSME_UPDATE_DEVICE_indication.DeviceAddress = params.NLME_LEAVE_indication.DeviceAddress;
@@ -1114,7 +1080,6 @@ SubmitJoinRequest:
                     break;
                 #endif
             }
-
             #else
                 currentPrimitive = NO_PRIMITIVE;
             #endif
@@ -1129,7 +1094,6 @@ SubmitJoinRequest:
              * see Mandatory test 3.9
              */
             ZigBeeStatus.flags.bits.bTryOrphanJoin = SET;
-
             currentPrimitive = NO_PRIMITIVE;
             break;
 
@@ -1138,7 +1102,6 @@ SubmitJoinRequest:
                 PrintChar(params.NLME_LEAVE_confirm.Status);
                 printf(" Leaving the Zigbee network\r\n" );
             #endif
-
             currentPrimitive = NO_PRIMITIVE;
             break;
 
@@ -1147,14 +1110,12 @@ SubmitJoinRequest:
                 #ifndef THEODOIDONGVAT
                     BYTE data;
                 #endif
-
                 currentPrimitive = NO_PRIMITIVE;
                 #if defined (USE_DEBUG)
                      printf("params.APSDE_DATA_indication.ClusterId.Val..:");
                      UART1PrintChar(params.APSDE_DATA_indication.ClusterId.Val);
                      printf("\r\n");
                 #endif
-
                 switch (params.APSDE_DATA_indication.DstEndpoint)
                 {
                     case WSAN_Endpoint:
@@ -1164,7 +1125,6 @@ SubmitJoinRequest:
                              UART1PrintChar(params.APSDE_DATA_indication.ClusterId.Val);
                              printf("\r\n");
                         #endif
-
                         switch (params.APSDE_DATA_indication.ClusterId.Val)
                         {
                             //VAN_CHINH_K57 - retasking
@@ -1294,7 +1254,7 @@ SubmitJoinRequest:
                                     CYCLE_SENDING_STATUS = f3;
                                 #endif
                             }
-                            
+                            break;
                             //user clusterID application
                             #ifdef USE_SAVE_ENERGY_MODE
                                 //case SAVE_ENERGY_SYN_CLUSTER://#define SAVE_ENERGY_SYN_CLUSTER   0x000B
@@ -1356,7 +1316,6 @@ SubmitJoinRequest:
                                 break;
                             #endif
                            
-
                             #if defined(USE_SHT10)
                                 case HTE_REQUEST_CLUSTER://gui du lieu nhiet do do am ma emboard yeu cau
                                 {
@@ -1383,7 +1342,6 @@ SubmitJoinRequest:
                                         PrintChar(CYCLE_SENDING);
                                         printf("\r\n");
                                     #endif
-
                                 }
                                 break;
                                 
@@ -1411,7 +1369,6 @@ SubmitJoinRequest:
                                 data = APLGet();
                                 Send_Packet_ToRouterEmboard(PACKET_RESPONSE_CLUSTER, data);
                             }break;
-                                
                             #endif
 
                             #if defined(USE_MQ6_V1)
@@ -1426,7 +1383,6 @@ SubmitJoinRequest:
                                     #endif
                                 }
                                 break;
-
                             #endif
 
                             case 0x0005:
@@ -1689,38 +1645,29 @@ SubmitJoinRequest:
                         ENABLE_WDT();
                         NetworkDescriptor = NULL;
                         orphanTries = 3;
-
                         // If you are going to send data to a terminal, initialize the UART.
                         #if defined(USE_DEBUG) || defined(USE_CONTROL_PUMP) || defined(USE_CONTROL_ALARM) || defined(USE_MINI_RADAR)
                             ConsoleInit();
                         #endif
-
                         // Initialize the hardware - must be done before initializing ZigBee.
                         HardwareInit();
-
                         // Initialize the ZigBee Stack.
                         ZigBeeInit();
                         currentPrimitive = NO_PRIMITIVE;
-
                         // SET interrupts to get everything going.
                         RFIE = SET;
-
                         /* Initialize my status flags*/
                         WSANFlags.Val = 0x0000;
-
                         /* Start the network anew each time Node is booted up */
                         NWKClearNeighborTable();
                         #if defined(I_SUPPORT_BINDINGS)
                             ClearBindingTable();
                         #endif
-
                         /* Clear the Group Table */
                         RemoveAllGroups();
-
                         #if defined(I_SUPPORT_BINDINGS)
                             RemoveAllBindings(macPIB.macShortAddress);
                         #endif
-
                         /* Clearing nwk status flags */
                         nwkStatus.flags.Val = 0x00;
                         SleepingState = SET;
@@ -1755,19 +1702,15 @@ void ProcessNONZigBeeTasks(void)
         {
             WSANFlags.bits.EnableGetDataHTE = CLEAR;
             LoadSHT10();
-
             #if defined(USE_DEBUG)
                 printf("Temperature (hex): ");
                 PrintWord(temperature);
                 printf("\r\n");
-
                 printf("Humidity (hex): ");
                 PrintWord(humidity);
                 printf("\r\n");
             #endif
-           
             WSANFlags.bits.HTE_Data_Ready = SET;//cho phep gui du lieu dinh ki ve gateway
-           
         }
 
   //  #else
@@ -1776,23 +1719,19 @@ void ProcessNONZigBeeTasks(void)
         {
             WSANFlags.bits.EnableGetDataHTE5M = CLEAR;
             LoadSHT10();
-
             #if defined(USE_DEBUG)
                 printf("Temperature (hex): ");
                 PrintWord(temperature);
                 printf("\r\n");
-
                 printf("Humidity (hex): ");
                 PrintWord(humidity);
                 printf("\r\n");
             #endif
-
-           Send_HTE_ToRouterEmboard(HTE_AUTO_SEND_CLUSTER);
-           #if defined(USE_DEBUG)
-           printf("Just sent data positio for request of Router_EMB\r\n");
-          #endif
-
-  }
+            Send_HTE_ToRouterEmboard(HTE_AUTO_SEND_CLUSTER);
+            #if defined(USE_DEBUG)
+                printf("Just sent data positio for request of Router_EMB\r\n");
+	    #endif
+  	}
            #endif
         /************quang hoa**************/
         #if defined(USE_PTC06)
@@ -1801,7 +1740,6 @@ void ProcessNONZigBeeTasks(void)
         {
             WSANFlags.bits.EnableGetDataCMR = CLEAR;
           /*  Take_photo();
-
             #if defined(USE_DEBUG)
                 printf("data (hex): ");
                 WORD i;
@@ -1809,17 +1747,13 @@ void ProcessNONZigBeeTasks(void)
                     PrintChar(data[i]);
                 }
                 printf("\r\n");
-
                 printf("length_data (hex): ");
                 PrintWord(length_data);
                 printf("\r\n");
             #endif*/
-
             WSANFlags.bits.CMR_Data_Ready = SET;//cho phep gui du lieu dinh ki ve gateway
           }
         #endif
-      
-
         #if defined(USE_SAVE_ENERGY_MODE)
 	if (SendDataAfterSleep)
         {
@@ -1828,7 +1762,6 @@ void ProcessNONZigBeeTasks(void)
         }
         #endif
  
-
     #if defined(USE_WARNING_LOW_POWER) && defined(USE_MQ6_V1)
     if (WSANFlags.bits.MQ6orVoltage == Finish_Convert)
     {
@@ -1902,7 +1835,6 @@ void ProcessNONZigBeeTasks(void)
     #endif
 
     #if !defined(USE_WARNING_LOW_POWER) && defined(USE_MQ6_V1)
-
     if(WSANFlags.bits.CompleteADC)
     {
         #if defined(USE_DEBUG)
@@ -1910,7 +1842,6 @@ void ProcessNONZigBeeTasks(void)
             UART1PrintWord(Mq6Signal);
             printf("\r\n");
         #endif
-
 //        if(WSANFlags.bits.DisableGetThresMq6 == 0)
 //        {
 //            if(WSANFlags.bits.OnTimeGetMQ6 == 1)
@@ -1935,9 +1866,7 @@ void ProcessNONZigBeeTasks(void)
 //                WSANFlags.bits.MQ6Warning = SET;
 //            }
 //        }
-        
         Mq6Signal = 0;//Clear this variable to reuse
-
         WSANFlags.bits.CompleteADC = CLEAR;
     }
     #endif
@@ -1951,7 +1880,6 @@ void ProcessNONZigBeeTasks(void)
             WSAN_LED = SET;
     }
     #endif
-
 }
 
 /*******************************************************************************
@@ -1967,13 +1895,11 @@ void HardwareInit(void)
     ANSE = 0x0000;
     ANSG = 0x0000;
     ANSD = 0x0000;
-
     /*Configure for SPI communication*/
     #if(CLOCK_FREQ < 1000000)
         //SPI1 for RF transceiver
         SPI1CON1 = 0b0000000100111111;      // CLOCK_FREQ as SPI CLOCK
         SPI1STAT = 0x8000;
-
         //SPI2 for EEPROM
         SPI2CON1 = 0b0000000100111111;      // CLOCK_FREQ as SPI CLOCK
         SPI2STAT = 0x8000;
@@ -1990,11 +1916,9 @@ void HardwareInit(void)
                                         //Idle state for the clock is a low level; active state is a high level
                                         //Secondary prescale 1:1
                                         //Primary prescale 4:1 -> CLOCK_FREQ/2/4 as SPI CLOCK
-
         //Enables module and configures SCKx, SDOx, SDIx and ~SSx as serial port pins
         //Interrupt when the last data in the receive buffer is read; as a result, the buffer is empty (SRXMPT bit is set)
         SPI1STAT = 0x8000;
-
         /* SPI2 for EEPROM */
         //same as configuration SPI1 module
         SPI2CON1 = 0b0000000100111110;
@@ -2006,7 +1930,6 @@ void HardwareInit(void)
     	EEPROM_nCS_TRIS	= 0;
     	IFS2bits.SPI2IF = 1;
     #endif
-
     PHY_RESETn = 0;
     PHY_RESETn_TRIS = 0;
     PHY_CS = 1;
@@ -2014,19 +1937,16 @@ void HardwareInit(void)
 
     RFIF = 0;
     RFIE = 1;
-
     if(RF_INT_PIN == 0)
     {
         RFIF = 1;
     }
-
     /*Configure for other modules that designed by lab411*/
     // configure for led module
     #if defined(USE_LED)
         WSAN_LED_TRIS = 0;
         WSAN_LED = CLEAR;//Clear Led to a initialize state
     #endif
-    
     // configure for ADC module
         //config for pin
     #if defined(USE_WARNING_LOW_POWER) || defined(USE_MQ6_V1)
@@ -2043,42 +1963,34 @@ void HardwareInit(void)
             MQ6_MEASURE_ANALOG = SET;
             MQ6_MEASURE_TRIS = 1;
         #endif
-
         //configure ADC module
         AD1CON1 = 0x0470;//12-bit A/D operation
                         //Output format bit is absolute decimal result, unsigned, right-justified
                         //Internal counter ends sampling and starts conversion
                         //Sampling begins when SAMP bit is manually set
-
         AD1CON2 = 0x0800;//VDD is voltage reference
                         //AD1CON2 = 0x4800;//external positive voltage reference --> for measure signal from smoke sensor
                         //Conversion result is loaded into the buffer POWER_SUPPLY_BUFF
                         //Interrupt at the completion of conversion for each sample
                         //Always uses channel input selects for Sample A
-
         AD1CON3 = 0x1F02;//Sample Time = 31Tad, Tad = 3Tcy
-
         #if defined(USE_WARNING_LOW_POWER)
             AD1CHS = VOLTAGE_MEASURE_CHANNEL;//do dien ap dau tien
         #else
             AD1CHS = MQ6_MEASURE_CHANNEL;//do MQ6
         #endif
-
         AD1CON1bits.ADON = SET;//bat dau lay gia tri dien ap
-        
         //config for ADC interrupt
         IFS0bits.AD1IF = CLEAR;
         IEC0bits.AD1IE = SET;
         IPC3bits.AD1IP = 6;
     #endif
-
     // configure for I2C software module to connect with SHT sensor.
     #if defined(USE_SHT10)
         // Make RG2, RG3 outputs.
         SCK_TRIS    =   CLEAR;
         DATA_TRIS   =   CLEAR;
     #endif
-
     // check Miniradar if it connect with this board target
     #ifdef USE_MINI_RADAR
         if(CheckMiniRadar())
@@ -2096,10 +2008,8 @@ void HardwareInit(void)
             #endif
         }
     #endif
-
     // configure interface to connect with PIR
     #if defined(USE_PIR) || defined(USE_MQ6_V2)
-
         INTCON1bits.NSTDIS = 1;//Interrupt nesting is disabled
         INTCON2bits.INT0EP = 1;//neg edge
 
@@ -2124,7 +2034,6 @@ additional interrupt processing.
 //this routine is written by dat_a3cbq91
 void _ISR __attribute__((interrupt, auto_psv)) _T3Interrupt(void)
 {
-      
     IFS0bits.T3IF = CLEAR;
     #if defined(THEODOIDONGVAT)
         #if defined(USE_MINI_RADAR)
@@ -2136,20 +2045,17 @@ void _ISR __attribute__((interrupt, auto_psv)) _T3Interrupt(void)
         #endif
     #else
     //if (SleepingStateTimerFlag) SleepTimer ++;
-
     TimerCount++;
     #if defined(USE_MQ6_V2)
         Timer_MQ6++;
-
         if(TimerCount == 30)
             WSANFlags.bits.OnTimeGetMQ6 = SET;
-
         if(Timer_MQ6 == CYCLE_MQ6 && WSANFlags.bits.OnTimeGetMQ6 == CLEAR)
         {
             WSANFlags.bits.OnTimeGetMQ6 = SET;
         }
     #endif
- if (WSANFlags.bits.Autocmr == SET)// Autocmr =1 => gui du lieu len
+    if (WSANFlags.bits.Autocmr == SET)// Autocmr =1 => gui du lieu len
     {
           /***********quanghoa***********/
           
@@ -2161,55 +2067,40 @@ void _ISR __attribute__((interrupt, auto_psv)) _T3Interrupt(void)
            // #endif
          //}
      }
- 
-
     
     if (WSANFlags.bits.DeviceMode == ActiveMode)//Devicemode = 1 --> Save Energy.
     {
           /***********trongkhanh***********/
-
-         if(TimerCount%CYCLE_SENDING_5M == 0 && CYCLE_SENDING_STATUS == 1){
+	if(TimerCount%CYCLE_SENDING_5M == 0 && CYCLE_SENDING_STATUS == 1)
+ 	{
             #if defined(USE_SHT10)
                 WSANFlags.bits.EnableGetDataHTE5M = SET;
             #endif
-            }
-
+        }
         if (TimerCount == CYCLE_SENDING && CYCLE_SENDING_STATUS == 1)
         {
             TimerCount = CLEAR;
-
             //SET get temperature and humidity from SHT10 every (5*CYCLE_SENDING)s
             #if defined(USE_SHT10)
                 WSANFlags.bits.EnableGetDataHTE = SET;
             #endif
-
             //start sampling for conversion to digital
             #if defined(USE_WARNING_LOW_POWER) && !defined(USE_MQ6_V1)
                 AD1CON1bits.SAMP = SET;
             #endif
-
             #if defined(I_AM_ACTOR1) || defined(I_AM_ACTOR2)
                 WSANFlags.bits.EnablePingToRE = SET;
             #endif
-
-            
         }
-
-        
-        
         //start sampling for conversion to digital. every 5s meassure MQ6 signal
         #if defined(USE_MQ6_V1)
             AD1CON1bits.SAMP = SET;
         #endif
-    
     }
     #endif
-
-   
     //re-assigned for PR3:PR2
     PR3 = timer >> 16;
     PR2 = timer & 0xFFFF;
-   
     //if you don't want print neighbor of this node, comment the following
     //WSANFlags.bits.PrintNeighborTable = SET;
 }
@@ -2299,23 +2190,28 @@ void _ISR __attribute__((interrupt, auto_psv)) _U1RXInterrupt(void)
 {
     IFS0bits.U1RXIF = CLEAR;
     data = U1RXREG;
-    if(data=='a'){
+    if(data=='a')
+    {
         Take_photo();
         UART1PutROMString("end");
-               }
-    if(data=='b'){
-        //UART1PrintWord(length_data);
-       for(j=0;j<length_data;j++){
-        UART1PrintChar(buffer[j]);
-        CLRWDT();
-            }
     }
-    if(data=='c'){
+    if(data=='b')
+    {
         //UART1PrintWord(length_data);
-       for(j=0;j<length_data;j++){
-        UART1Put(buffer[j]);
-        CLRWDT();
-            }        
+	for(j=0;j<length_data;j++)
+	{
+	    UART1PrintChar(buffer[j]);
+            CLRWDT();
+	}
+    }
+    if(data=='c')
+    {
+        //UART1PrintWord(length_data);
+        for(j=0;j<length_data;j++)
+	{
+            UART1Put(buffer[j]);
+            CLRWDT();
+    	}        
     }
 }
 #endif
@@ -2323,7 +2219,6 @@ void _ISR __attribute__((interrupt, auto_psv)) _U1RXInterrupt(void)
 void _ISR __attribute__((interrupt, auto_psv)) _U1RXInterrupt(void)
 {
     IFS0bits.U1RXIF = CLEAR;
-    
     i = U1RXREG;
     #if defined(USE_DEBUG)
         ConsolePut(i);
@@ -2403,20 +2298,15 @@ BOOL CheckMiniRadar()
     unsigned long _i =0;
     BOOL ex =0;
     char Temp;
-
     //CLEAR UART1 interrupt
     IEC0bits.U1RXIE = CLEAR;
     IFS0bits.U1RXIF = CLEAR;
-
     //ping to MiniRadar Board
     UART1Put('R');
-
     //CLEAR Watchdog Timer to avoid reset system before receive response from MiniRadar Board
     DISABLE_WDT();
-
     //if don't receive response from MiniRadar Board after time out, break wait
     while((!IFS0bits.U1RXIF)&&(_i <= 1000000)) _i++;
-
     //if receive (a) message from MiniRadar Board, check it if is 'R' character
     if(IFS0bits.U1RXIF)
     {
@@ -2427,10 +2317,8 @@ BOOL CheckMiniRadar()
     }
     else
          ex = 0;
-
     //Re-SET Watchdog Timer.
     ENABLE_WDT();
-
     //Re-SET UART1 interrupt
     IEC0bits.U1RXIE = SET;
     IFS0bits.U1RXIF = CLEAR;
@@ -2440,28 +2328,25 @@ BOOL CheckMiniRadar()
 /***********quanghoa*************/
 #if /*defined(USE_DEBUG)&&*/ defined(USE_PTC06)
 // ham thiet lap ban dau
-void Initphoto(void){
-    //printf("bat dau size\n");
-    sendPhotoSize();
+void Initphoto(void)
+{
     //lenh thiet lap lai size image
-    //sendPhotoSize();
-    // printf("bat dau ress\n");
+    sendPhotoSize();
+    //thiet lap ti so nen
     sendCompressRate();
-   }
+}
 /********************/
 // ham chup anh va lay do dai, data anh
-void Take_photo(void){
-     // printf("bat dau cache\n");
+void Take_photo(void)
+{
+    //xoa cache
     sendStopPhoto();
-    // printf("bat dau pho to\n");
-    /**chup anh***/
+    //chup anh
     sendStartPhoto();
-   //  printf("bat dau length\n");
+    //lay do dai anh
     sendGetLength();
-    // printf("bat dau\n");
+    //lay do dai data anh
     length_data=sendGetPhoto(buffer);
-   //  printf("end\n");
-     UART1PrintWord(length_data);
 }
 /***************ham gui dia chi mac va do dai anh ve R-EMB**********/
 //void Send_MAC_ToRouterEmboard(WORD CMR_Cluster)
@@ -2515,18 +2400,14 @@ void Send_IMAGE_ToRouterEmboard(WORD CMR_Cluster)
     params.APSDE_DATA_request.DstAddrMode = APS_ADDRESS_16_BIT;//0x02 : Ban tin Unicast, Set che do dia chi mang ( DstAddress) 16 bit va yeu cau co' DstEndPoint
     params.APSDE_DATA_request.DstAddress.ShortAddr.v[1] = RouterEmboardAddrMSB;
     params.APSDE_DATA_request.DstAddress.ShortAddr.v[0] = RouterEmboardAddrLSB;
-
     params.APSDE_DATA_request.SrcEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.DstEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.ProfileId.Val = MY_PROFILE_ID;
-
     //params.APSDE_DATA_request.asduLength; TxData
     params.APSDE_DATA_request.RadiusCounter = DEFAULT_RADIUS;//gioi han so hop ma du lieu duoc phep truyen qua, o day la 10 hop
-
 //    params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_FORCE;
 //    params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_SUPPRESS;
     params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_ENABLE;
-
     #ifdef I_SUPPORT_SECURITY
         params.APSDE_DATA_request.TxOptions.Val = SET;
     #else
@@ -2534,7 +2415,6 @@ void Send_IMAGE_ToRouterEmboard(WORD CMR_Cluster)
     #endif
     params.APSDE_DATA_request.TxOptions.bits.acknowledged = SET;// Yeu cau ACK tu thiet bi thu
     params.APSDE_DATA_request.ClusterId.Val = CMR_Cluster;
-
     ZigBeeBlockTx();//goi ham nay de ZigbeeIsReady() --> false
     currentPrimitive = APSDE_DATA_request;
 }
@@ -2550,22 +2430,17 @@ void Send_Packet_ToRouterEmboard(WORD CMR_Cluster, BYTE pk)
         TxBuffer[TxData++] = buffer[j+pk*80];
         if(buffer[j+pk*80-1]==0xFF && buffer[j+pk*80]==0xD9)break;
     }
-
     params.APSDE_DATA_request.DstAddrMode = APS_ADDRESS_16_BIT;//0x02 : Ban tin Unicast, Set che do dia chi mang ( DstAddress) 16 bit va yeu cau co' DstEndPoint
     params.APSDE_DATA_request.DstAddress.ShortAddr.v[1] = RouterEmboardAddrMSB;
     params.APSDE_DATA_request.DstAddress.ShortAddr.v[0] = RouterEmboardAddrLSB;
-
     params.APSDE_DATA_request.SrcEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.DstEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.ProfileId.Val = MY_PROFILE_ID;
-
     //params.APSDE_DATA_request.asduLength; TxData
     params.APSDE_DATA_request.RadiusCounter = DEFAULT_RADIUS;//gioi han so hop ma du lieu duoc phep truyen qua, o day la 10 hop
-
 //    params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_FORCE;
 //    params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_SUPPRESS;
     params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_ENABLE;
-
     #ifdef I_SUPPORT_SECURITY
         params.APSDE_DATA_request.TxOptions.Val = SET;
     #else
@@ -2573,7 +2448,6 @@ void Send_Packet_ToRouterEmboard(WORD CMR_Cluster, BYTE pk)
     #endif
     params.APSDE_DATA_request.TxOptions.bits.acknowledged = SET;// Yeu cau ACK tu thiet bi thu
     params.APSDE_DATA_request.ClusterId.Val = CMR_Cluster;
-
     ZigBeeBlockTx();//goi ham nay de ZigbeeIsReady() --> false
     currentPrimitive = APSDE_DATA_request;
 }
@@ -2602,13 +2476,11 @@ void Send_HTE_ToRouterEmboard(WORD HTE_Cluster)
     //cau truc ban tin du lieu dinh ki nhu sau:
     //D1D2D3D4D5D6D7D8EE
     //gui du lieu nhiet do - do am - nang luong chua qua xu ly
-    
     TxBuffer[TxData++] = MAC_LONG_ADDR_BYTE0;
     TxBuffer[TxData++] = (BYTE) (temperature >> 8);
     TxBuffer[TxData++] = (BYTE) (temperature);
     TxBuffer[TxData++] = (BYTE) (humidity >> 8);
     TxBuffer[TxData++] = (BYTE) (humidity);
-   
     //tempere=(float)(temperature*0.01-40.00);
     #if defined(USE_WARNING_LOW_POWER)
     TxBuffer[TxData++] = (BYTE) (Energy_Level >> 8);
@@ -2617,22 +2489,17 @@ void Send_HTE_ToRouterEmboard(WORD HTE_Cluster)
         TxBuffer[TxData++] = 0x00;
         TxBuffer[TxData++] = 0x00;
     #endif
-       
     params.APSDE_DATA_request.DstAddrMode = APS_ADDRESS_16_BIT;//0x02 : Ban tin Unicast, Set che do dia chi mang ( DstAddress) 16 bit va yeu cau co' DstEndPoint
     params.APSDE_DATA_request.DstAddress.ShortAddr.v[1] = RouterEmboardAddrMSB;
     params.APSDE_DATA_request.DstAddress.ShortAddr.v[0] = RouterEmboardAddrLSB;
-
     params.APSDE_DATA_request.SrcEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.DstEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.ProfileId.Val = MY_PROFILE_ID;
-
     //params.APSDE_DATA_request.asduLength; TxData
     params.APSDE_DATA_request.RadiusCounter = DEFAULT_RADIUS;//gioi han so hop ma du lieu duoc phep truyen qua, o day la 10 hop
-
 //    params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_FORCE;
 //    params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_SUPPRESS;
     params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_ENABLE;
-
     #ifdef I_SUPPORT_SECURITY
         params.APSDE_DATA_request.TxOptions.Val = SET;
     #else
@@ -2681,28 +2548,22 @@ void LoadSHT10(void)
 
 void SendOneByte(BYTE data, WORD ClusterID)
 {
-
     //cau truc ban tin gui tu router-emboard toi cac node khac: DD
     //TxBuffer[TxData++] = MAC_LONG_ADDR_BYTE0;
     TxBuffer[TxData++] = data;
-
     params.APSDE_DATA_request.DstAddrMode = APS_ADDRESS_16_BIT;
     // Address of destination node
     params.APSDE_DATA_request.DstAddress.ShortAddr.v[1] = RouterEmboardAddrMSB;
     params.APSDE_DATA_request.DstAddress.ShortAddr.v[0] = RouterEmboardAddrLSB;
-
     params.APSDE_DATA_request.RadiusCounter = DEFAULT_RADIUS;
     params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_ENABLE;
 //    params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_SUPPRESS;
-
     #ifdef I_SUPPORT_SECURITY
         params.APSDE_DATA_request.TxOptions.Val = SET;
     #else
         params.APSDE_DATA_request.TxOptions.Val = CLEAR;
     #endif
-
     params.APSDE_DATA_request.TxOptions.bits.acknowledged = SET;
-
     params.APSDE_DATA_request.SrcEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.DstEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.ProfileId.Val = MY_PROFILE_ID;
@@ -2710,7 +2571,6 @@ void SendOneByte(BYTE data, WORD ClusterID)
 
     //make ZigbeeIsReady() false
     ZigBeeBlockTx();
-
     currentPrimitive = APSDE_DATA_request;
 }
 
@@ -2720,22 +2580,17 @@ void Send_STATUS(WORD ClusterID)
     TxBuffer[TxData++]= SHT_STATUS;
     TxBuffer[TxData++]= PTC06_STATUS;
     TxBuffer[TxData++]= CYCLE_SENDING_STATUS;
-
     params.APSDE_DATA_request.DstAddrMode = APS_ADDRESS_16_BIT;//0x02 : Ban tin Unicast, Set che do dia chi mang ( DstAddress) 16 bit va yeu cau co' DstEndPoint
     params.APSDE_DATA_request.DstAddress.ShortAddr.v[1] = RouterEmboardAddrMSB;
     params.APSDE_DATA_request.DstAddress.ShortAddr.v[0] = RouterEmboardAddrLSB;
-
     params.APSDE_DATA_request.SrcEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.DstEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.ProfileId.Val = MY_PROFILE_ID;
-
     //params.APSDE_DATA_request.asduLength; TxData
     params.APSDE_DATA_request.RadiusCounter = DEFAULT_RADIUS;//gioi han so hop ma du lieu duoc phep truyen qua, o day la 10 hop
-
 //    params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_FORCE;
 //    params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_SUPPRESS;
     params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_ENABLE;
-
     #ifdef I_SUPPORT_SECURITY
         params.APSDE_DATA_request.TxOptions.Val = SET;
     #else
@@ -2766,36 +2621,35 @@ void Send_STATUS(WORD ClusterID)
  ********************************************************************/
 void RouteDrawRequestToNextHop(BYTE MSB_dest_addr, BYTE LSB_dest_addr, BYTE NodeNumber, BYTE *pListOfNode)
 {
-	BYTE i;
-	NodeNumber ++;
-	TxBuffer[TxData++] = MSB_dest_addr;//Dia chi Node dich
-	TxBuffer[TxData++] = LSB_dest_addr;
+    BYTE i;
+    NodeNumber ++;
+    TxBuffer[TxData++] = MSB_dest_addr;//Dia chi Node dich
+    TxBuffer[TxData++] = LSB_dest_addr;
     TxBuffer[TxData++] = NodeNumber;//So node di qua
-    for (i = 0; i< NodeNumber - 1; i++) TxBuffer[TxData++]= *pListOfNode;
- 	TxBuffer[TxData++] = MAC_LONG_ADDR_BYTE0; //Chen them byte0 dia chi MAC cua node   
+    for (i = 0; i< NodeNumber - 1; i++)
+    {
+        TxBuffer[TxData++]= *pListOfNode;
+    }
+    TxBuffer[TxData++] = MAC_LONG_ADDR_BYTE0; //Chen them byte0 dia chi MAC cua node   
     for (i = 0; i < ROUTING_TABLE_SIZE-RESERVED_ROUTING_TABLE_ENTRIES; i++ )//Gui den forward Node
-            {	
-		    GetRoutingEntry(&currentRoutingEntry,pCurrentRoutingEntry);
-            if ((MSB_dest_addr == currentRoutingEntry.destAddress.byte.MSB)&&(LSB_dest_addr == currentRoutingEntry.destAddress.byte.LSB)&&(currentRoutingEntry.status == ROUTE_ACTIVE))
-                { 
-                params.APSDE_DATA_request.DstAddress.ShortAddr.v[1] = currentRoutingEntry.nextHop.byte.MSB;
-                params.APSDE_DATA_request.DstAddress.ShortAddr.v[0] = currentRoutingEntry.nextHop.byte.LSB;
-				break;
-				}
-             }
-       
+    {	
+        GetRoutingEntry(&currentRoutingEntry,pCurrentRoutingEntry);
+        if ((MSB_dest_addr == currentRoutingEntry.destAddress.byte.MSB)&&(LSB_dest_addr == currentRoutingEntry.destAddress.byte.LSB)&&(currentRoutingEntry.status == ROUTE_ACTIVE))
+	{ 
+  	    params.APSDE_DATA_request.DstAddress.ShortAddr.v[1] = currentRoutingEntry.nextHop.byte.MSB;
+	    params.APSDE_DATA_request.DstAddress.ShortAddr.v[0] = currentRoutingEntry.nextHop.byte.LSB;
+	    break;
+	}
+    }
     params.APSDE_DATA_request.DstAddrMode = APS_ADDRESS_16_BIT;//0x02 : Ban tin Unicast, Set che do dia chi mang ( DstAddress) 16 bit va yeu cau co' DstEndPoint
     params.APSDE_DATA_request.SrcEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.DstEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.ProfileId.Val = MY_PROFILE_ID;
-
     //params.APSDE_DATA_request.asduLength; TxData
     params.APSDE_DATA_request.RadiusCounter = DEFAULT_RADIUS;//gioi han so hop ma du lieu duoc phep truyen qua, o day la 10 hop
-
 //    params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_FORCE;
     params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_SUPPRESS;
 //    params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_ENABLE;
-
     #ifdef I_SUPPORT_SECURITY
         params.APSDE_DATA_request.TxOptions.Val = SET;
     #else
@@ -2824,25 +2678,25 @@ void RouteDrawRequestToNextHop(BYTE MSB_dest_addr, BYTE LSB_dest_addr, BYTE Node
  ********************************************************************/
 void RouteDrawReply(BYTE NodeNumber, BYTE *pListOfNode)
 {
-	BYTE i;
-	NodeNumber ++;
+    BYTE i;
+    NodeNumber ++;
     TxBuffer[TxData++] = NodeNumber;//So node di qua
-    for (i = 0; i< NodeNumber - 1; i++) TxBuffer[TxData++]= *pListOfNode;
- 	TxBuffer[TxData++] = MAC_LONG_ADDR_BYTE0; //Chen them byte0 dia chi MAC cua node   
+    for (i = 0; i< NodeNumber - 1; i++) 
+    {
+        TxBuffer[TxData++]= *pListOfNode;
+    }
+    TxBuffer[TxData++] = MAC_LONG_ADDR_BYTE0; //Chen them byte0 dia chi MAC cua node   
     params.APSDE_DATA_request.DstAddress.ShortAddr.v[1] = RouterEmboardAddrMSB;
     params.APSDE_DATA_request.DstAddress.ShortAddr.v[0] = RouterEmboardAddrLSB;
     params.APSDE_DATA_request.DstAddrMode = APS_ADDRESS_16_BIT;//0x02 : Ban tin Unicast, Set che do dia chi mang ( DstAddress) 16 bit va yeu cau co' DstEndPoint
     params.APSDE_DATA_request.SrcEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.DstEndpoint = WSAN_Endpoint;
     params.APSDE_DATA_request.ProfileId.Val = MY_PROFILE_ID;
-
     //params.APSDE_DATA_request.asduLength; TxData
     params.APSDE_DATA_request.RadiusCounter = DEFAULT_RADIUS;//gioi han so hop ma du lieu duoc phep truyen qua, o day la 10 hop
-
 //    params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_FORCE;
     params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_SUPPRESS;
 //    params.APSDE_DATA_request.DiscoverRoute = ROUTE_DISCOVERY_ENABLE;
-
     #ifdef I_SUPPORT_SECURITY
         params.APSDE_DATA_request.TxOptions.Val = SET;
     #else
@@ -2870,7 +2724,8 @@ void RouteDrawReply(BYTE NodeNumber, BYTE *pListOfNode)
  * Note: By Hoang Anh Son - K53
  ********************************************************************/
 void MCUSleep(void)
-{//DSCON THANH GHI DIEU KHIEN CHE DO SLEEP
+{
+    //DSCON THANH GHI DIEU KHIEN CHE DO SLEEP
     DSCONbits.DSEN=1;//DEEP SLEEP ENABLE bit
     DSCONbits.DSBOR=1;//PHAT HIEN SU KIEN TRONG MODE SLEEP
     DSCONbits.RELEASE=0;//CONFIG I/O SAU KHI WAKE
@@ -2891,10 +2746,10 @@ void MCUSleep(void)
  ********************************************************************/
 void MCUWake(void)
 {
-  DSWAKEbits.DSINT0=0;//
-  DSWAKEbits.DSWDT=1;// WATCHDOG TIMER TIME-OUT TRONG MODE SLEEP
-  DSWAKEbits.DSRTCC;
-  if(DSWAKEbits.DSFLT==1){};//BIT PHAT HIEN LOI
-     DSWAKEbits.DSMCLR =0;  //BIT SU KIEN CUA MCLR
-  RCON2bits.VBAT;
+    DSWAKEbits.DSINT0=0;//
+    DSWAKEbits.DSWDT=1;// WATCHDOG TIMER TIME-OUT TRONG MODE SLEEP
+    DSWAKEbits.DSRTCC;
+    if(DSWAKEbits.DSFLT==1){};//BIT PHAT HIEN LOI
+    DSWAKEbits.DSMCLR =0;  //BIT SU KIEN CUA MCLR
+    RCON2bits.VBAT;
 }
