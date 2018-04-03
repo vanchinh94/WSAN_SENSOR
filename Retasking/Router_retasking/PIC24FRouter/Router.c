@@ -684,7 +684,6 @@ void ProcessZigBeePrimitives(void)
                     #endif
                     // Save the descriptor list pointer so we can destroy it later.
                     NetworkDescriptor = params.NLME_NETWORK_DISCOVERY_confirm.NetworkDescriptor;
-
                     // Select a network to try to join.  We're not going to be picky right now...
                     currentNetworkDescriptor = NetworkDescriptor;
 SubmitJoinRequest:
